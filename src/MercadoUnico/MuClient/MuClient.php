@@ -56,6 +56,14 @@ class MuClient
     }
 
     /**
+     * @return bool
+     */
+    public function isSandboxMode(): bool
+    {
+        return $this->sandboxMode;
+    }
+
+    /**
      * @return string
      */
     private function getApiBaseUrl(): string
