@@ -78,7 +78,7 @@ class MuClient
      * @return MuResponse
      * @throws Exceptions\MuException
      */
-    public function getPropiedad(string $id): MuResponse
+    public function findPropiedad(string $id): MuResponse
     {
         return CurlRestClient::connect($this->getApiBaseUrl())
             ->auth($this->token)
@@ -86,12 +86,27 @@ class MuClient
     }
 
     /**
+     * @param array $queryParameters
+     * @return MuResponse
+     * @throws Exceptions\MuErrorResponseException
+     * @throws Exceptions\MuException
+     */
+    public function getPropiedades(array $queryParameters = []): MuResponse
+    {
+        $queryString = http_build_query($queryParameters);
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->get("/propiedades?$queryString");
+    }
+
+
+    /**
      * @param array $datosPropiedad
      * @return MuResponse
      * @throws Exceptions\JsonErrorException
      * @throws Exceptions\MuException
      */
-    public function crearPropiedad(array $datosPropiedad): MuResponse
+    public function storePropiedad(array $datosPropiedad): MuResponse
     {
         return CurlRestClient::connect($this->getApiBaseUrl())
             ->auth($this->token)
@@ -106,7 +121,7 @@ class MuClient
      * @throws Exceptions\MuException
      * @throws MuErrorRequestException
      */
-    public function editarPropiedad(string $id, array $datosPropiedad): MuResponse
+    public function updatePropiedad(string $id, array $datosPropiedad): MuResponse
     {
         if (!$id) {
             throw new MuErrorRequestException("Debe indicar el id de la propiedad que desea operar.");
@@ -123,7 +138,7 @@ class MuClient
      * @throws Exceptions\MuException
      * @throws MuErrorRequestException
      */
-    public function eliminarPropiedad(string $id): MuResponse
+    public function destroyPropiedad(string $id): MuResponse
     {
         if (!$id) {
             throw new MuErrorRequestException("Debe indicar el id de la propiedad que desea operar.");
@@ -133,4 +148,66 @@ class MuClient
             ->auth($this->token)
             ->delete("/propiedades/{$id}");
     }
+
+    /**
+     * @return MuResponse
+     * @throws Exceptions\MuErrorResponseException
+     * @throws Exceptions\MuException
+     */
+    public function getCiudades(): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->get("/ciudades");
+    }
+
+    /**
+     * @param string $id
+     * @return MuResponse
+     * @throws Exceptions\MuException
+     */
+    public function findCiudad(string $id): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->get("/ciudades/{$id}");
+    }
+
+
+    /**
+     * @return MuResponse
+     * @throws Exceptions\MuErrorResponseException
+     * @throws Exceptions\MuException
+     */
+    public function getTiposPropiedad(): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->get("/tipos-propiedad");
+    }
+
+    /**
+     * @param string $id
+     * @return MuResponse
+     * @throws Exceptions\MuException
+     */
+    public function findTipoPropiedad(string $id): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->get("/tipos-propiedad/{$id}");
+    }
+
+    /**
+     * @return MuResponse
+     * @throws Exceptions\MuErrorResponseException
+     * @throws Exceptions\MuException
+     */
+    public function getOperaciones(): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->get("/operaciones");
+    }
+
 }
