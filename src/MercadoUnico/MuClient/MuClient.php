@@ -122,6 +122,19 @@ class MuClient
     }
 
     /**
+     * @param array $datosAlerta
+     * @return MuResponse
+     * @throws Exceptions\JsonErrorException
+     * @throws Exceptions\MuException
+     */
+    public function storeAlerta(array $datosAlerta): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->post('/alertas', $datosAlerta);
+    }
+
+    /**
      * @param string $id
      * @param array $datosPropiedad
      * @return MuResponse

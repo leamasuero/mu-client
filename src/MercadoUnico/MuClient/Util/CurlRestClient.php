@@ -127,15 +127,7 @@ class CurlRestClient
      */
     public function post(string $path, array $data = []): MuResponse
     {
-        $jsonData = json_encode($data);
-
-        if (function_exists('json_last_error')) {
-            if (json_last_error() != JSON_ERROR_NONE) {
-                throw new JsonErrorException(json_last_error(), $data);
-            }
-        }
-
-        return $this->exec(self::POST, $path, $jsonData);
+        return $this->exec(self::POST, $path, $data);
     }
 
     /**
@@ -148,15 +140,7 @@ class CurlRestClient
      */
     public function patch(string $path, array $data = []): MuResponse
     {
-        $jsonData = json_encode($data);
-
-        if (function_exists('json_last_error')) {
-            if (json_last_error() != JSON_ERROR_NONE) {
-                throw new JsonErrorException(json_last_error(), $data);
-            }
-        }
-
-        return $this->exec(self::PATCH, $path, $jsonData);
+        return $this->exec(self::PATCH, $path, $data);
     }
 
     /**
@@ -177,7 +161,7 @@ class CurlRestClient
      * @param array $data
      * @return resource
      */
-    private function buildRequest(string $method, string $path, array $data = [])
+    private function buildRequest(string $method, string $path, array $data)
     {
         $connect = curl_init();
 
@@ -191,7 +175,16 @@ class CurlRestClient
         switch ($method) {
             case self::POST:
             case self::PATCH:
-                curl_setopt($connect, CURLOPT_POSTFIELDS, $data);
+
+                $jsonData = json_encode($data);
+
+                if (function_exists('json_last_error')) {
+                    if (json_last_error() != JSON_ERROR_NONE) {
+                        throw new JsonErrorException(json_last_error(), $data);
+                    }
+                }
+
+                curl_setopt($connect, CURLOPT_POSTFIELDS, $jsonData); // ver como se debe pasar esto? array o string?
                 break;
         }
 
