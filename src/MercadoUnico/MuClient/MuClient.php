@@ -93,6 +93,23 @@ class MuClient
             ->get("/propiedades/{$id}");
     }
 
+    private function httpBuildQuery(array $parametros)
+    {
+        $excepciones = ['scopes'];
+        $vacios = array_filter($parametros, function ($v, $k) use ($excepciones) {
+            return in_array($k, $excepciones) && empty($v);
+        }, ARRAY_FILTER_USE_BOTH);
+
+        $queryString = http_build_query($parametros);
+
+        foreach ($vacios as $k => $v) {
+            $queryString .= "&{$k}[]=";
+        }
+
+        return $queryString;
+    }
+
+
     /**
      * @param array $queryParameters
      * @return MuResponse
@@ -101,7 +118,8 @@ class MuClient
      */
     public function getPropiedades(array $queryParameters = []): MuResponse
     {
-        $queryString = http_build_query($queryParameters);
+        $queryString = $this->httpBuildQuery($queryParameters);
+
         return CurlRestClient::connect($this->getApiBaseUrl())
             ->auth($this->token)
             ->get("/propiedades?$queryString");
@@ -151,6 +169,27 @@ class MuClient
         return CurlRestClient::connect($this->getApiBaseUrl())
             ->auth($this->token)
             ->patch("/propiedades/{$id}", $datosPropiedad);
+    }
+
+
+    /**
+     * @param string $id
+     * @param array $scopes
+     * @return MuResponse
+     * @throws Exceptions\JsonErrorException
+     * @throws Exceptions\MuErrorResponseException
+     * @throws Exceptions\MuException
+     * @throws MuErrorRequestException
+     */
+    public function updatePropiedadScopes(string $id, array $scopes): MuResponse
+    {
+        if (!$id) {
+            throw new MuErrorRequestException("Debe indicar el id de la propiedad que desea operar.");
+        }
+
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->patch("/propiedades/{$id}/scopes", $scopes);
     }
 
     /**
