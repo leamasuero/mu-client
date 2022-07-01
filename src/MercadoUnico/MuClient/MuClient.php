@@ -140,6 +140,19 @@ class MuClient
     }
 
     /**
+     * @param array $datosCiudad
+     * @return MuResponse
+     * @throws Exceptions\JsonErrorException
+     * @throws Exceptions\MuException
+     */
+    public function storeCiudad(array $datosCiudad): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->post('/ciudades', $datosCiudad);
+    }
+
+    /**
      * @param array $datosAlerta
      * @return MuResponse
      * @throws Exceptions\JsonErrorException
