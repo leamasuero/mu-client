@@ -3,6 +3,8 @@
 namespace MercadoUnico\MuClient;
 
 use MercadoUnico\MuClient\Exceptions\MuErrorRequestException;
+use MercadoUnico\MuClient\Exceptions\MuErrorResponseException;
+use MercadoUnico\MuClient\Exceptions\MuException;
 use MercadoUnico\MuClient\Http\MuResponse;
 use MercadoUnico\MuClient\Util\CurlRestClient;
 
@@ -223,15 +225,21 @@ class MuClient
     }
 
     /**
+     * @param string|null $inmobiliariaId
      * @return MuResponse
-     * @throws Exceptions\MuErrorResponseException
-     * @throws Exceptions\MuException
+     * @throws MuErrorResponseException
+     * @throws MuException
      */
-    public function getCiudades(): MuResponse
+    public function getCiudades(?string $inmobiliariaId = null): MuResponse
     {
-        return CurlRestClient::connect($this->getApiBaseUrl())
-            ->auth($this->token)
-            ->get("/ciudades");
+        $client = CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token);
+
+        if (!empty($inmobiliariaId)) {
+            return $client->get("/inmobiliarias/{$inmobiliariaId}/ciudades");
+        }
+
+        return $client->get("/ciudades");
     }
 
     /**
