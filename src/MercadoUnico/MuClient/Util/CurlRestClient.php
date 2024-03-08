@@ -2,6 +2,7 @@
 
 namespace MercadoUnico\MuClient\Util;
 
+use CURLFile;
 use MercadoUnico\MuClient\Exceptions\JsonErrorException;
 use MercadoUnico\MuClient\Exceptions\MuErrorResponseException;
 use MercadoUnico\MuClient\Exceptions\MuException;
@@ -37,8 +38,9 @@ class CurlRestClient
      * @param string $host
      * @param integer $port
      * @return CurlRestClient
+     * @throws MuException
      */
-    static public function connect(string $host, int $port = 80)
+    static public function connect(string $host, int $port = 80): CurlRestClient
     {
         if (!extension_loaded("curl")) {
             throw new MuException("cURL extension not found. You need to enable cURL in your php.ini or another configuration you have.");
@@ -58,7 +60,7 @@ class CurlRestClient
         $this->port = $port;
         $this->headers = [
             "Accept" => "application/json",
-            "Content-type" => "application/json"
+            "Content-Type" => "application/json"
         ];
     }
 
@@ -69,17 +71,18 @@ class CurlRestClient
      */
     public function auth(string $token, string $type = 'Basic'): self
     {
-        $this->setHeaders(array('Authorization' => "{$type} {$token}"));
+        $this->setHeader('Authorization', "{$type} {$token}");
         return $this;
     }
 
     /**
-     * @param array $headers
-     * @return CurlRestClient
+     * @param string $key
+     * @param string $value
+     * @return $this
      */
-    public function setHeaders(array $headers): self
+    public function setHeader(string $key, string $value): self
     {
-        $this->headers = array_merge($this->headers, $headers);
+        $this->headers[$key] = $value;
         return $this;
     }
 
@@ -92,10 +95,9 @@ class CurlRestClient
     }
 
     /**
-     *
      * @return array
      */
-    private function getHttpHeaders()
+    private function getHttpHeaders(): array
     {
         $headers = [];
         foreach ($this->getHeaders() as $k => $v) {
@@ -132,9 +134,8 @@ class CurlRestClient
 
     /**
      * @param string $path
-     * @param string $data
+     * @param array $data
      * @return MuResponse
-     * @throws JsonErrorException
      * @throws MuErrorResponseException
      * @throws MuException
      */
@@ -160,6 +161,7 @@ class CurlRestClient
      * @param string $path
      * @param array $data
      * @return resource
+     * @throws JsonErrorException
      */
     private function buildRequest(string $method, string $path, array $data)
     {
@@ -210,6 +212,44 @@ class CurlRestClient
 
         $responseStatusCode = curl_getinfo($connect, CURLINFO_HTTP_CODE);
 
+        if ($responseStatusCode >= Response::HTTP_BAD_REQUEST) {
+            throw new MuErrorResponseException(json_decode($response, true), $responseStatusCode);
+        }
+
+        curl_close($connect);
+
+        return new MuResponse(json_decode($response, true), $responseStatusCode);
+    }
+
+    /**
+     * @param string $path
+     * @param CURLFile $CURLFile
+     * @return MuResponse
+     * @throws MuErrorResponseException
+     * @throws MuException
+     */
+    public function file(string $path, CURLFile $CURLFile): MuResponse
+    {
+        $this->setHeader('Content-Type', 'multipart/form-data');
+
+        $connect = curl_init();
+
+        curl_setopt($connect, CURLOPT_USERAGENT, "MercadoUnico PHP SDK v" . MuClient::VERSION);
+        curl_setopt($connect, CURLOPT_URL, "{$this->host}{$path}");
+        curl_setopt($connect, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($connect, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_setopt($connect, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($connect, CURLOPT_HTTPHEADER, $this->getHttpHeaders());
+        curl_setopt($connect, CURLOPT_POST, 1);
+        curl_setopt($connect, CURLOPT_POSTFIELDS, ['files' => $CURLFile]);
+
+        $response = curl_exec($connect);
+
+        if ($response === false) {
+            throw new MuException(curl_error($connect));
+        }
+
+        $responseStatusCode = curl_getinfo($connect, CURLINFO_HTTP_CODE);
         if ($responseStatusCode >= Response::HTTP_BAD_REQUEST) {
             throw new MuErrorResponseException(json_decode($response, true), $responseStatusCode);
         }

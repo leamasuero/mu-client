@@ -2,16 +2,18 @@
 
 namespace MercadoUnico\MuClient;
 
+use CURLFile;
 use MercadoUnico\MuClient\Exceptions\MuErrorRequestException;
 use MercadoUnico\MuClient\Exceptions\MuErrorResponseException;
 use MercadoUnico\MuClient\Exceptions\MuException;
 use MercadoUnico\MuClient\Http\MuResponse;
 use MercadoUnico\MuClient\Util\CurlRestClient;
+use SplFileInfo;
 
 class MuClient
 {
 
-    const VERSION = "1.0.0";
+    const VERSION = "1.0.5";
     const API_BASE_URL = "https://api.mercado-unico.com";
     const SANDBOX_API_BASE_URL = "https://api.prop44.info";
 
@@ -74,8 +76,8 @@ class MuClient
     }
 
     /**
-     * @param $username
-     * @param $password
+     * @param string $username
+     * @param string $password
      * @return string
      */
     private function getAccessToken(string $username, string $password): string
@@ -95,7 +97,7 @@ class MuClient
             ->get("/propiedades/{$id}");
     }
 
-    private function httpBuildQuery(array $parametros)
+    private function httpBuildQuery(array $parametros): string
     {
         $excepciones = ['scopes'];
         $vacios = array_filter($parametros, function ($v, $k) use ($excepciones) {
@@ -139,6 +141,20 @@ class MuClient
         return CurlRestClient::connect($this->getApiBaseUrl())
             ->auth($this->token)
             ->post('/propiedades', $datosPropiedad);
+    }
+
+    /**
+     * @param SplFileInfo $documento
+     * @param string $filename
+     * @return MuResponse
+     * @throws Exceptions\MuErrorResponseException
+     * @throws Exceptions\MuException
+     */
+    public function storeDocumento(SplFileInfo $documento, string $filename): MuResponse
+    {
+        return CurlRestClient::connect($this->getApiBaseUrl())
+            ->auth($this->token)
+            ->file('/documentos', new CURLFile($documento->getRealPath(), $documento->getMimeType(), $filename));
     }
 
     /**
